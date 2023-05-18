@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:chat_app/helper/chat_user_card.dart';
 import 'package:chat_app/helper/models/user_model.dart';
 import 'package:chat_app/screens/login_screen.dart';
@@ -5,6 +7,7 @@ import 'package:chat_app/screens/profile_screen.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:chat_app/helper/api/firebase_references.dart';
+import 'package:flutter/services.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -24,6 +27,22 @@ class _HomeScreenState extends State<HomeScreen> {
   void initState() {
     super.initState();
     Helper.getSelfInfo();
+    //for setting user status to active
+    Helper.updateActiveStatus(true);
+
+    // for updating user active status acording to lifecycle events
+    //resume -- active or online
+    // pause -- inactive or ofline
+    SystemChannels.lifecycle.setMessageHandler((message) {
+      log('Message: $message');
+      if (message.toString().contains('resume')) {
+        Helper.updateActiveStatus(true);
+      }
+      if (message.toString().contains('pause')) {
+        Helper.updateActiveStatus(false);
+      }
+      return Future.value(message);
+    });
   }
 
   @override

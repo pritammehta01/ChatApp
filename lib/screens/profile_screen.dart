@@ -23,6 +23,7 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
+  bool loading = false;
   File? image;
   //firestorage
   final FirebaseStorage storage = FirebaseStorage.instance;
@@ -33,7 +34,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
       onTap: () => FocusScope.of(context).unfocus(),
       child: Scaffold(
         appBar: AppBar(
-          automaticallyImplyLeading: false,
+          leading: IconButton(
+              onPressed: () => Navigator.pop(context),
+              icon: const Icon(
+                Icons.arrow_back_ios_new,
+                color: Colors.black,
+              )),
           title: const Text(
             "Profile Screen",
             style: TextStyle(fontSize: 18),
@@ -128,17 +134,29 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       ],
                     ),
                   ),
+                  //for updating user information
                   SizedBox(
                     height: 45,
                     width: 200,
                     child: CustomButton(
                         title: "Update",
-                        onTap: () {
+                        loading: loading,
+                        onTap: () async {
+                          setState(() {
+                            loading = true;
+                          });
+                          final imageUrl = await uploadImage(image!);
                           if (_formKey.currentState!.validate()) {
                             _formKey.currentState!.save();
-                            Helper.updateUesrProfile();
-                            Helper.updateUesrInfo().then((value) {
+
+                            await Helper.updateUesrProfile(imageUrl: imageUrl);
+                            await Helper.updateUesrInfo().then((value) {
                               showSnackBar(context, "Updated successfully");
+                              setState(() {
+                                loading = false;
+                                // Update the user's image URL in the widget
+                                widget.user.image = imageUrl;
+                              });
                             });
                           }
                         }),
@@ -165,8 +183,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
   //for selecting profile image
   void selectImage() async {
     image = await pickImage(context);
-    final imageUrl = await uploadImage(image!);
-    Helper.me.image = imageUrl;
 
     setState(() {});
   }

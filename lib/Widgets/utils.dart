@@ -35,7 +35,7 @@ Future<File?> pickImage(BuildContext context) async {
       image = File(pickedImage!.path);
     }
   } catch (e) {
-    showSnackBar(context, e.toString());
+    showSnackBar(context, "No Image Selected");
   }
   return image;
 }

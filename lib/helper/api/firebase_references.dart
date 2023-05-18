@@ -1,7 +1,11 @@
+import 'dart:developer';
+import 'dart:io';
+
 import 'package:chat_app/helper/models/message.dart';
 import 'package:chat_app/helper/models/user_model.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/widgets.dart';
 
 class Helper {
@@ -13,6 +17,8 @@ class Helper {
 
   //for  accessing cloud firestore
   static FirebaseFirestore firestore = FirebaseFirestore.instance;
+  //for access firestore storage
+  static FirebaseStorage storage = FirebaseStorage.instance;
 
   //for getting current user info
   static Future<void> getSelfInfo() async {
@@ -40,6 +46,23 @@ class Helper {
         .snapshots();
   }
 
+  // for getting specific user info
+  static Stream<QuerySnapshot<Map<String, dynamic>>> getUserInfo(
+      ChatUser chatUser) {
+    return firestore
+        .collection("users")
+        .where("id", isEqualTo: chatUser.id)
+        .snapshots();
+  }
+
+  //update online or last active status of user
+  static Future<void> updateActiveStatus(bool isOnline) async {
+    firestore.collection("users").doc(user.uid).update({
+      'is_Online': isOnline,
+      'last_active': DateTime.now().millisecondsSinceEpoch.toString()
+    });
+  }
+
   //for updating user information
   static Future<void> updateUesrInfo() async {
     await firestore.collection("users").doc(user.uid).update({
@@ -48,11 +71,12 @@ class Helper {
     });
   }
 
-  static Future<void> updateUesrProfile() async {
+  static Future<void> updateUesrProfile({required String imageUrl}) async {
+    await me.image != imageUrl;
     await firestore
         .collection("users")
         .doc(user.uid)
-        .update({'image': me.image});
+        .update({'image': imageUrl});
   }
 
   //usful for getting convertion Id
@@ -66,11 +90,13 @@ class Helper {
       ChatUser user) {
     return firestore
         .collection('chat/${getConversationID(user.id)}/messages/')
+        .orderBy('sent', descending: true)
         .snapshots();
   }
 
   //for sending message
-  static Future<void> sendMessage(ChatUser chatUser, String msg) async {
+  static Future<void> sendMessage(
+      ChatUser chatUser, String msg, Type type) async {
     //message sending time(also used as id)
     final time = DateTime.now().millisecondsSinceEpoch.toString();
 
@@ -79,7 +105,7 @@ class Helper {
         msg: msg,
         toId: chatUser.id,
         read: '',
-        type: Type.text,
+        type: type,
         fromId: user.uid,
         sent: time);
 
@@ -102,6 +128,24 @@ class Helper {
     return firestore
         .collection('chat/${getConversationID(user.id)}/messages/')
         .orderBy('sent', descending: true)
+        .limit(1)
         .snapshots();
+  }
+
+  // send chat image
+  static Future<void> sendChatImage(ChatUser chatUser, File file) async {
+    //getting image file extension
+    final ext = file.path.split('.').last;
+
+    //storage file with path
+    final Reference ref = storage.ref().child(
+        "image/${getConversationID(chatUser.id)}/${DateTime.now().millisecondsSinceEpoch}.$file");
+    await ref
+        .putFile(file, SettableMetadata(contentType: 'image/$file'))
+        .then((p0) {
+      log('Data Transfered:${p0.bytesTransferred / 1000}kb');
+    });
+    final imageUrl = await ref.getDownloadURL();
+    await sendMessage(chatUser, imageUrl, Type.image);
   }
 }

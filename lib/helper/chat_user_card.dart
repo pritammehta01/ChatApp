@@ -62,8 +62,13 @@ class _ChatUserCardState extends State<ChatUserCard> {
                 ),
                 title: Text(widget.user.name),
                 subtitle: Text(
-                  _message != null ? _message!.msg : widget.user.about,
+                  _message != null
+                      ? _message!.type == Type.image
+                          ? 'image'
+                          : _message!.msg
+                      : widget.user.about,
                   style: const TextStyle(fontWeight: FontWeight.w800),
+                  maxLines: 1,
                 ),
                 trailing: _message == null
                     ? null //show nothing when no message sent

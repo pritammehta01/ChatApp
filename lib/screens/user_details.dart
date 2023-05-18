@@ -59,14 +59,6 @@ class _PorofileScreenState extends State<UserdetailsScreen> {
                     child: image != null
                         ? CircleAvatar(
                             backgroundImage: FileImage(image!),
-                            child: const Align(
-                              alignment: Alignment.bottomRight,
-                              child: Icon(
-                                Icons.camera_alt,
-                                color: Colors.orange,
-                                size: 40,
-                              ),
-                            ),
                           )
                         : const CircleAvatar(
                             backgroundColor: Colors.transparent,
@@ -151,8 +143,6 @@ class _PorofileScreenState extends State<UserdetailsScreen> {
 
   void selectImage() async {
     image = await pickImage(context);
-    // ignore: unused_local_variable
-    final imageUrl = await uploadImage(image!);
     setState(() {});
   }
 

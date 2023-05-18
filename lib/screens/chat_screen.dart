@@ -1,9 +1,14 @@
 // ignore_for_file: public_member_api_docs, sort_constructors_first
 
+import 'dart:io';
+
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:chat_app/Widgets/utils.dart';
 import 'package:chat_app/helper/api/firebase_references.dart';
 import 'package:chat_app/helper/message_card.dart';
 import 'package:chat_app/helper/models/message.dart';
+import 'package:chat_app/helper/my_date_utils.dart';
+import 'package:emoji_picker_flutter/emoji_picker_flutter.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
@@ -21,101 +26,158 @@ class ChatScreen extends StatefulWidget {
 }
 
 class _ChatScreenState extends State<ChatScreen> {
+  //image
+  File? image;
+  //for starting value of show emoji or hiding
+  bool _showEmoji = false;
+
   //for storing all messages
   List<Message> _list = [];
   //for handeling message text changes
   final _textController = TextEditingController();
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
-      child: Scaffold(
-        backgroundColor: const Color.fromARGB(255, 221, 245, 255),
-        appBar: AppBar(
-          automaticallyImplyLeading: false,
-          flexibleSpace: _appBar(),
-        ),
-        body: Column(
-          children: [
-            Expanded(
-              child: StreamBuilder(
-                stream: Helper.getAllMessage(widget.user),
-                builder: (context, snapshot) {
-                  switch (snapshot.connectionState) {
-                    case ConnectionState.waiting:
-                    case ConnectionState.none:
-                      return const SizedBox();
-                    case ConnectionState.active:
-                    case ConnectionState.done:
-                      final data = snapshot.data?.docs;
-
-                      _list = data
-                              ?.map((e) => Message.fromJson(e.data()))
-                              .toList() ??
-                          [];
-
-                      if (_list.isNotEmpty) {
-                        return ListView.builder(
-                          itemCount: _list.length,
-                          itemBuilder: (context, index) {
-                            return MessageCard(
-                              message: _list[index],
-                            );
-                          },
-                        );
-                      } else {
-                        return const Center(
-                            child: Text("Say Hii👋",
-                                style: TextStyle(fontSize: 20)));
-                      }
-                  }
-                },
-              ),
+    return GestureDetector(
+      onTap: () => FocusScope.of(context).unfocus(),
+      child: SafeArea(
+        child: WillPopScope(
+          onWillPop: () {
+            if (_showEmoji) {
+              setState(() {
+                _showEmoji = !_showEmoji;
+              });
+              return Future.value(false);
+            } else {
+              return Future.value(true);
+            }
+          },
+          child: Scaffold(
+            backgroundColor: const Color.fromARGB(255, 221, 245, 255),
+            appBar: AppBar(
+              automaticallyImplyLeading: false,
+              flexibleSpace: _appBar(),
             ),
-            _chatInput()
-          ],
+            body: Column(
+              children: [
+                Expanded(
+                  child: StreamBuilder(
+                    stream: Helper.getAllMessage(widget.user),
+                    builder: (context, snapshot) {
+                      switch (snapshot.connectionState) {
+                        case ConnectionState.waiting:
+                        case ConnectionState.none:
+                          return const SizedBox();
+                        case ConnectionState.active:
+                        case ConnectionState.done:
+                          final data = snapshot.data?.docs;
+
+                          _list = data
+                                  ?.map((e) => Message.fromJson(e.data()))
+                                  .toList() ??
+                              [];
+
+                          if (_list.isNotEmpty) {
+                            return ListView.builder(
+                              reverse: true,
+                              itemCount: _list.length,
+                              itemBuilder: (context, index) {
+                                return MessageCard(
+                                  message: _list[index],
+                                );
+                              },
+                            );
+                          } else {
+                            return const Center(
+                                child: Text("Say Hii👋",
+                                    style: TextStyle(fontSize: 20)));
+                          }
+                      }
+                    },
+                  ),
+                ),
+                _chatInput(),
+                //show emojis on keybord on emojibutton click & voice versa
+                if (_showEmoji)
+                  SizedBox(
+                    height: 230,
+                    child: EmojiPicker(
+                      onBackspacePressed: () => Navigator.pop(context),
+                      textEditingController: _textController,
+                      config: Config(
+                        bgColor: const Color.fromARGB(255, 221, 245, 255),
+                        columns: 8,
+                        emojiSizeMax: 32 * (Platform.isIOS ? 1.30 : 1.0),
+                      ),
+                    ),
+                  )
+              ],
+            ),
+          ),
         ),
       ),
     );
   }
 
   Widget _appBar() {
-    return Row(
-      children: [
-        IconButton(
-            onPressed: () => Navigator.pop(context),
-            icon: const Icon(Icons.arrow_back)),
-        ClipRRect(
-          borderRadius: BorderRadius.circular(40),
-          child: CachedNetworkImage(
-            fit: BoxFit.fill,
-            width: 45,
-            height: 45,
-            imageUrl: widget.user.image,
-            errorWidget: (context, url, error) =>
-                const CircleAvatar(child: Icon(CupertinoIcons.person)),
-          ),
-        ),
-        const SizedBox(width: 10),
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(
-              widget.user.name,
-              style: const TextStyle(
-                  fontSize: 16, fontWeight: FontWeight.bold, letterSpacing: 1),
-            ),
-            const SizedBox(height: 2),
-            const Text(
-              "last Seen unvailable",
-              style: TextStyle(
-                fontSize: 13,
-              ),
-            ),
-          ],
-        )
-      ],
-    );
+    return InkWell(
+        onTap: () {},
+        child: StreamBuilder(
+          stream: Helper.getUserInfo(widget.user),
+          builder: (context, snapshot) {
+            final data = snapshot.data?.docs;
+            final list =
+                data?.map((e) => ChatUser.fromJson(e.data())).toList() ?? [];
+
+            return Row(
+              children: [
+                IconButton(
+                    onPressed: () => Navigator.pop(context),
+                    icon: const Icon(Icons.arrow_back)),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(40),
+                  child: CachedNetworkImage(
+                    fit: BoxFit.fill,
+                    width: 45,
+                    height: 45,
+                    imageUrl:
+                        list.isNotEmpty ? list[0].image : widget.user.image,
+                    errorWidget: (context, url, error) =>
+                        const CircleAvatar(child: Icon(CupertinoIcons.person)),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      list.isNotEmpty ? list[0].name : widget.user.name,
+                      style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 1),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      list.isNotEmpty
+                          ? list[0].isOnline
+                              ? 'Online'
+                              : MyDateUtil.getLastActiveTime(
+                                  context: context,
+                                  lastActive: list[0].lastActive)
+                          : MyDateUtil.getLastActiveTime(
+                              context: context,
+                              lastActive: widget.user.lastActive),
+                      style: const TextStyle(
+                        fontSize: 13,
+                      ),
+                    ),
+                  ],
+                )
+              ],
+            );
+          },
+        ));
   }
 
   Widget _chatInput() {
@@ -130,13 +192,19 @@ class _ChatScreenState extends State<ChatScreen> {
               child: Row(
                 children: [
                   IconButton(
-                      onPressed: () {},
+                      onPressed: () {
+                        setState(() => _showEmoji = !_showEmoji);
+                      },
                       icon: const Icon(
                         Icons.emoji_emotions,
                         color: Colors.blueAccent,
                       )),
                   Expanded(
                       child: TextField(
+                    onTap: () {
+                      FocusScope.of(context).unfocus();
+                      if (_showEmoji) setState(() => _showEmoji = !_showEmoji);
+                    },
                     controller: _textController,
                     maxLines: null,
                     keyboardType: TextInputType.multiline,
@@ -144,17 +212,14 @@ class _ChatScreenState extends State<ChatScreen> {
                         hintText: "Type Somthing...", border: InputBorder.none),
                   )),
                   IconButton(
-                      onPressed: () {},
+                      onPressed: () async {
+                        selectImage();
+                        await Helper.sendChatImage(widget.user, image!);
+                      },
                       icon: const Icon(
                         Icons.image,
                         color: Colors.blueAccent,
                       )),
-                  IconButton(
-                      onPressed: () {},
-                      icon: const Icon(
-                        Icons.camera_alt,
-                        color: Colors.blueAccent,
-                      ))
                 ],
               ),
             ),
@@ -167,7 +232,8 @@ class _ChatScreenState extends State<ChatScreen> {
             minWidth: 0,
             onPressed: () {
               if (_textController.text.isNotEmpty) {
-                Helper.sendMessage(widget.user, _textController.text);
+                Helper.sendMessage(
+                    widget.user, _textController.text, Type.text);
                 _textController.text = '';
               }
             },
@@ -179,5 +245,12 @@ class _ChatScreenState extends State<ChatScreen> {
         ],
       ),
     );
+  }
+
+  //for selecting image source from where
+  void selectImage() async {
+    image = await pickImage(context);
+
+    setState(() {});
   }
 }
