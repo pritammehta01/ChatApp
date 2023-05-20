@@ -6,7 +6,6 @@ import 'package:chat_app/helper/models/user_model.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
-import 'package:flutter/widgets.dart';
 
 class Helper {
 //for storing mySelf information
@@ -72,7 +71,7 @@ class Helper {
   }
 
   static Future<void> updateUesrProfile({required String imageUrl}) async {
-    await me.image != imageUrl;
+    me.image != imageUrl;
     await firestore
         .collection("users")
         .doc(user.uid)
@@ -135,7 +134,7 @@ class Helper {
   // send chat image
   static Future<void> sendChatImage(ChatUser chatUser, File file) async {
     //getting image file extension
-    final ext = file.path.split('.').last;
+    //final ext = file.path.split('.').last;
 
     //storage file with path
     final Reference ref = storage.ref().child(
@@ -147,5 +146,24 @@ class Helper {
     });
     final imageUrl = await ref.getDownloadURL();
     await sendMessage(chatUser, imageUrl, Type.image);
+  }
+
+  //delete message
+  static Future<void> deleteMessage(Message message) async {
+    await firestore
+        .collection('chat/${getConversationID(message.toId)}/messages/')
+        .doc(message.sent)
+        .delete();
+    if (message.type == Type.image) {
+      await storage.refFromURL(message.msg).delete();
+    }
+  }
+
+  //update message
+  static Future<void> updateMessage(Message message, String updatedMsg) async {
+    await firestore
+        .collection('chat/${getConversationID(message.toId)}/messages/')
+        .doc(message.sent)
+        .update({'msg': updatedMsg});
   }
 }

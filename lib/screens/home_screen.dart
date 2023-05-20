@@ -2,7 +2,6 @@ import 'dart:developer';
 
 import 'package:chat_app/helper/chat_user_card.dart';
 import 'package:chat_app/helper/models/user_model.dart';
-import 'package:chat_app/screens/login_screen.dart';
 import 'package:chat_app/screens/profile_screen.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -35,12 +34,16 @@ class _HomeScreenState extends State<HomeScreen> {
     // pause -- inactive or ofline
     SystemChannels.lifecycle.setMessageHandler((message) {
       log('Message: $message');
-      if (message.toString().contains('resume')) {
-        Helper.updateActiveStatus(true);
+      if (Helper.auth.currentUser != null) {
+        if (message.toString().contains('resume')) {
+          Helper.updateActiveStatus(true);
+        }
+
+        if (message.toString().contains('pause')) {
+          Helper.updateActiveStatus(false);
+        }
       }
-      if (message.toString().contains('pause')) {
-        Helper.updateActiveStatus(false);
-      }
+
       return Future.value(message);
     });
   }

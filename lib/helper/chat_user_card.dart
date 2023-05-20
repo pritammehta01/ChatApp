@@ -1,4 +1,5 @@
 // ignore_for_file: public_member_api_docs, sort_constructors_first
+import 'package:chat_app/Widgets/dialoges/profile_dialog.dart';
 import 'package:chat_app/helper/api/firebase_references.dart';
 import 'package:chat_app/helper/models/message.dart';
 import 'package:chat_app/helper/my_date_utils.dart';
@@ -49,15 +50,24 @@ class _ChatUserCardState extends State<ChatUserCard> {
               if (list.isNotEmpty) _message = list[0];
 
               return ListTile(
-                leading: ClipRRect(
-                  borderRadius: BorderRadius.circular(40),
-                  child: CachedNetworkImage(
-                    fit: BoxFit.fill,
-                    width: 50,
-                    height: 50,
-                    imageUrl: widget.user.image,
-                    errorWidget: (context, url, error) =>
-                        const CircleAvatar(child: Icon(CupertinoIcons.person)),
+                leading: InkWell(
+                  onTap: () {
+                    showDialog(
+                        context: context,
+                        builder: (_) => ProfileDialog(
+                              user: widget.user,
+                            ));
+                  },
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(40),
+                    child: CachedNetworkImage(
+                      fit: BoxFit.fill,
+                      width: 50,
+                      height: 50,
+                      imageUrl: widget.user.image,
+                      errorWidget: (context, url, error) => const CircleAvatar(
+                          child: Icon(CupertinoIcons.person)),
+                    ),
                   ),
                 ),
                 title: Text(widget.user.name),

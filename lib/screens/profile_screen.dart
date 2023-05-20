@@ -6,11 +6,13 @@ import 'package:chat_app/Widgets/custom_button.dart';
 import 'package:chat_app/Widgets/utils.dart';
 import 'package:chat_app/helper/api/firebase_references.dart';
 import 'package:chat_app/screens/login_screen.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:chat_app/helper/models/user_model.dart';
 
+//profile screen --to show signed in user info
 class ProfileScreen extends StatefulWidget {
   final ChatUser user;
   const ProfileScreen({
@@ -168,8 +170,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
         ),
         floatingActionButton: FloatingActionButton.extended(
             onPressed: () async {
-              Helper.auth.signOut().then((value) {
+              await Helper.updateActiveStatus(false);
+              await Helper.auth.signOut().then((value) {
                 Navigator.pop(context);
+                Helper.auth = FirebaseAuth.instance;
                 Navigator.pushReplacement(context,
                     MaterialPageRoute(builder: (_) => const LoginScreen()));
               });

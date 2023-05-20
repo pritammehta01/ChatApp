@@ -1,3 +1,4 @@
+// ignore: file_names
 import 'dart:async';
 import 'package:chat_app/helper/api/firebase_references.dart';
 import 'package:chat_app/screens/home_screen.dart';
