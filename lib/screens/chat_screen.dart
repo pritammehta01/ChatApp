@@ -218,9 +218,8 @@ class _ChatScreenState extends State<ChatScreen> {
                         hintText: "Type Somthing...", border: InputBorder.none),
                   )),
                   IconButton(
-                      onPressed: () async {
+                      onPressed: () {
                         selectImage();
-                        await Helper.sendChatImage(widget.user, image!);
                       },
                       icon: const Icon(
                         Icons.image,
@@ -256,6 +255,7 @@ class _ChatScreenState extends State<ChatScreen> {
   //for selecting image source from where
   void selectImage() async {
     image = await pickImage(context);
+    Helper.sendChatImage(widget.user, image!);
 
     setState(() {});
   }

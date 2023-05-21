@@ -134,23 +134,20 @@ class Helper {
   // send chat image
   static Future<void> sendChatImage(ChatUser chatUser, File file) async {
     //getting image file extension
-    //final ext = file.path.split('.').last;
+    final ext = file.path.split('.').last;
 
     //storage file with path
     final Reference ref = storage.ref().child(
-        "image/${getConversationID(chatUser.id)}/${DateTime.now().millisecondsSinceEpoch}.$file");
-    await ref
-        .putFile(file, SettableMetadata(contentType: 'image/$file'))
-        .then((p0) {
-      log('Data Transfered:${p0.bytesTransferred / 1000}kb');
-    });
+        "image/${getConversationID(chatUser.id)}/${DateTime.now().millisecondsSinceEpoch}.$ext");
+    await ref.putFile(file, SettableMetadata(contentType: 'image/$ext'));
+
     final imageUrl = await ref.getDownloadURL();
-    await sendMessage(chatUser, imageUrl, Type.image);
+    sendMessage(chatUser, imageUrl, Type.image);
   }
 
   //delete message
   static Future<void> deleteMessage(Message message) async {
-    await firestore
+    firestore
         .collection('chat/${getConversationID(message.toId)}/messages/')
         .doc(message.sent)
         .delete();

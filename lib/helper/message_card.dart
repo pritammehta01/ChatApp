@@ -189,9 +189,9 @@ class _ChatCardState extends State<MessageCard> {
                     name: "Save Image",
                     onTap: () async {
                       try {
-                        await GallerySaver.saveImage(
-                          widget.message.msg,
-                        ).then((success) {
+                        await GallerySaver.saveImage(widget.message.msg,
+                                albumName: "Chat App")
+                            .then((success) {
                           Navigator.pop(context);
                           if (success != null) {
                             showSnackBar(context, "Image Saved");
