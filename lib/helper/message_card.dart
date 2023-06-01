@@ -268,8 +268,8 @@ class _ChatCardState extends State<MessageCard> {
                   top: 20, left: 24, right: 24, bottom: 10),
               shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(20)),
-              title: Row(
-                children: const [
+              title: const Row(
+                children: [
                   Icon(
                     Icons.message,
                     color: Colors.blue,

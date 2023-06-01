@@ -19,7 +19,7 @@ class _HomeScreenState extends State<HomeScreen> {
   //for storing all users
   List<ChatUser> _list = [];
   //for searched items
-  List<ChatUser> _searchingList = [];
+  final List<ChatUser> _searchingList = [];
   //for starting search status
   bool _isSearching = false;
   @override
